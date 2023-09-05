@@ -13,11 +13,11 @@ except IOError:
 
 # Read version from bsdiff/__init__.py
 pat = re.compile(r'__version__\s*=\s*(\S+)', re.M)
-data = open('bsdiff4/__init__.py').read()
+data = open('bsdiffhs/__init__.py').read()
 kwds['version'] = eval(pat.search(data).group(1))
 
 setup(
-    name = "bsdiff4",
+    name = "bsdiffhs",
     author = "Ilan Schnell",
     author_email = "ilanschnell@gmail.com",
     url = "https://github.com/ilanschnell/bsdiff4",
@@ -40,14 +40,15 @@ setup(
         "Programming Language :: Python :: 3.12",
         "Topic :: Utilities",
     ],
-    description = "binary diff and patch using the BSDIFF4-format",
-    packages = ["bsdiff4"],
-    ext_modules = [Extension(name = "bsdiff4.core",
-                             sources = ["bsdiff4/core.c"])],
+    description = "binary diff and patch using the BSDIFFHS-format",
+    packages = ["bsdiffhs"],
+    ext_modules = [Extension(name = "bsdiffhs.core",
+                             sources = ["bsdiffhs/core.c"])],
+    install_requires = ["heatshrink2"],
     entry_points = {
         'console_scripts': [
-            'bsdiff4 = bsdiff4.cli:main_bsdiff4',
-            'bspatch4 = bsdiff4.cli:main_bspatch4',
+            'bsdiffhs = bsdiffhs.cli:main_bsdiffhs',
+            'bspatchhs = bsdiffhs.cli:main_bspatchhs',
         ],
     },
     **kwds

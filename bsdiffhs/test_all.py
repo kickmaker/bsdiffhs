@@ -7,9 +7,9 @@ import shutil
 import unittest
 import tempfile
 
-import bsdiff4.core as core
-import bsdiff4.format as format
-from bsdiff4 import diff, patch, file_diff, file_patch, file_patch_inplace
+import bsdiffhs.core as core
+import bsdiffhs.format as format
+from bsdiffhs import diff, patch, file_diff, file_patch, file_patch_inplace
 
 
 N = 2 ** 63 - 1
@@ -150,8 +150,8 @@ class TestFile(unittest.TestCase):
 def run(verbosity=1):
     from . import __version__
     print('Python version: %s' % sys.version)
-    print('bsdiff4 is installed in: %s' % os.path.dirname(__file__))
-    print('bsdiff4 version: %s' % __version__)
+    print('bsdiffhs is installed in: %s' % os.path.dirname(__file__))
+    print('bsdiffhs version: %s' % __version__)
 
     suite = unittest.TestSuite()
     for cls in [TestEncode, TestFormat, TestFile]:

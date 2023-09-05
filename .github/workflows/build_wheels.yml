@@ -8,7 +8,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, windows-2019, macos-10.15]
+        os: [ubuntu-20.04, windows-2019, macos-12]
 
     steps:
       - uses: actions/checkout@v2
@@ -27,7 +27,11 @@ jobs:
           # emulated ones
           CIBW_ARCHS_LINUX: auto aarch64 ppc64le s390x
           CIBW_ARCHS_MACOS: x86_64 universal2 arm64
-          CIBW_TEST_COMMAND: python -c "import bsdiff4; assert bsdiff4.test().wasSuccessful()"
+          CIBW_TEST_COMMAND: python -c "import bsdiffhs; assert bsdiffhs.test().wasSuccessful()"
+          # heatshrink2 dependency suffers from "import array" issue and shall be replaced by char*
+          # https://github.com/h5py/h5py/pull/1515
+          # avoid on pypy
+          CIBW_SKIP: pp*
 
       - uses: actions/upload-artifact@v2
         with:
@@ -60,4 +64,4 @@ jobs:
       - uses: pypa/gh-action-pypi-publish@v1.4.2
         with:
           user: __token__
-          password: ${{ secrets.PYPI_BSDIFF4_TOKEN }}
+          password: ${{ secrets.PYPI_BSDIFFHS_TOKEN }}
