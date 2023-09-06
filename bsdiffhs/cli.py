@@ -3,11 +3,11 @@ from __future__ import absolute_import
 from os.path import getsize
 from optparse import OptionParser
 
-from bsdiff4.format import file_diff, file_patch, read_patch
+from bsdiffhs.format import file_diff, file_patch, read_patch
 
 
 def display_version():
-    from bsdiff4 import __version__
+    from bsdiffhs import __version__
     print("bsdiff4 %s" % __version__)
 
 

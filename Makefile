@@ -1,12 +1,12 @@
-bsdiff4/core.so: bsdiff4/core.c
+bsdiffhs/core.so: bsdiffhs/core.c
 	python setup.py build_ext --inplace
 
 
-test: bsdiff4/core.so
-	python -c "import bsdiff4; bsdiff4.test()"
+test: bsdiffhs/core.so
+	python -c "import bsdiffhs; bsdiffhs.test()"
 
 
 clean:
 	rm -rf build dist
-	rm -f bsdiff4/*.o bsdiff4/*.so bsdiff4/*.pyc
-	rm -rf bsdiff4/__pycache__ *.egg-info
+	rm -f bsdiffhs/*.o bsdiffhs/*.so bsdiffhs/*.pyc
+	rm -rf bsdiffhs/__pycache__ *.egg-info
