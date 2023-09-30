@@ -11,6 +11,10 @@ import bsdiffhs.core as core
 import bsdiffhs.format as format
 from bsdiffhs import diff, patch, file_diff, file_patch, file_patch_inplace
 
+min_window_sz2 = 4
+max_window_sz2 = 15
+min_lookahead_sz2 = 3
+min_lookahead_sz2 = max_window_sz2 - 1
 
 N = 2 ** 63 - 1
 
@@ -145,6 +149,17 @@ class TestFile(unittest.TestCase):
         file_diff(self.path('src'), self.path('dst'), self.path('patch'))
         file_patch_inplace(self.path('src'), self.path('patch'))
         self.assert_same_file_content('src', 'dst')
+
+    def test_heatshrink_parameters(self):
+        a = 1000 * b'ABCDE'
+        b = 1000 * b'XYZ'
+        self.write_data('src', a + os.urandom(100) + b)
+        self.write_data('dst', a + os.urandom(100) + b)
+        for wsize in range(min_window_sz2, max_window_sz2+1):
+            for lsize in range(min_lookahead_sz2, wsize):
+                file_diff(self.path('src'), self.path('dst'), self.path('patch'), window_sz2=wsize, lookahead_sz2=lsize)
+                file_patch_inplace(self.path('src'), self.path('patch'), window_sz2=wsize, lookahead_sz2=lsize)
+                self.assert_same_file_content('src', 'dst')
 
 
 def run(verbosity=1):

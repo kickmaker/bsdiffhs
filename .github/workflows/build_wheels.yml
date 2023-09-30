@@ -31,7 +31,7 @@ jobs:
           # heatshrink2 dependency suffers from "import array" issue and shall be replaced by char*
           # https://github.com/h5py/h5py/pull/1515
           # avoid on pypy
-          CIBW_SKIP: pp*
+          CIBW_SKIP: pp* cp36*
 
       - uses: actions/upload-artifact@v2
         with:
@@ -65,3 +65,20 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_BSDIFFHS_TOKEN }}
+  
+  release_github:
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    # Create release on every tag
+    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/')
+    steps:
+      - uses: actions/create-release@v1
+        id: create_release
+        with:
+          draft: false
+          prerelease: false
+          release_name: release_${{ github.ref }}
+          tag_name: ${{ github.ref }}
+          body_path: CHANGELOG.md
+        env:
+          GITHUB_TOKEN: ${{ github.token }}

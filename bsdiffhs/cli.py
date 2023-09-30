@@ -8,7 +8,7 @@ from bsdiffhs.format import file_diff, file_patch, read_patch
 
 def display_version():
     from bsdiffhs import __version__
-    print("bsdiff4 %s" % __version__)
+    print("bsdiffhs %s" % __version__)
 
 
 def human_bytes(n):
@@ -23,10 +23,10 @@ def human_bytes(n):
     return '%.2f MB' % (float(n) / (2 ** 20))
 
 
-def main_bsdiff4():
+def main_bsdiffhs():
     p = OptionParser(
         usage="usage: %prog [options] SRC DST PATCH",
-        description=("generate a BSDIFF4-format PATCH from SRC to DST "
+        description=("generate a BSDIFFHS-format PATCH from SRC to DST "
                      "and write it to PATCH"))
 
     p.add_option('-v', "--verbose",
@@ -69,10 +69,10 @@ def show_patch(patch_path):
     #    print('%20d %10d %10d' % t)
 
 
-def main_bspatch4():
+def main_bspatchhs():
     p = OptionParser(
         usage="usage: %prog [options] SRC DST PATCH",
-        description=("genertaes DST, by applying the BSDIFF4-format PATCH "
+        description=("genertaes DST, by applying the BSDIFFHS-format PATCH "
                      "file to SRC"))
 
     p.add_option("--version",
