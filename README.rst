@@ -88,7 +88,7 @@ how well test data works with different settings.`
    >>> a = 100000 * b'a'
    >>> b = bytearray(a)
    >>> b[100:106] = b' diff '
-   >>> p = bsdiff4.diff(a, bytes(b), 11, 5)
+   >>> p = bsdiffhs.diff(a, bytes(b), 11, 5)
    >>> len(p)
    154
    >>> bsdiffhs.patch(a, p, 11, 5) == b
