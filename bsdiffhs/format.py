@@ -21,43 +21,77 @@ def write_patch(fo, len_dst, tcontrol, bdiff, bextra, window_sz2=DEFAULT_WINDOW_
     """write a BSDIFFHS-format patch to stream 'fo'
     """
     fo.write(MAGIC)
-    faux = BytesIO()
-    # write control tuples as series of offts
+    fo.write(core.encode_int64(len_dst))
+    
+    bdiff_offset = 0
+    bextra_offset = 0
+    
     for c in tcontrol:
-        for x in c:
-            faux.write(core.encode_int64(x))
-    # compress each block
-    bcontrol = heatshrink2.compress(faux.getvalue(), window_sz2, lookahead_sz2)
-    bdiff = heatshrink2.compress(bdiff, window_sz2, lookahead_sz2)
-    bextra = heatshrink2.compress(bextra, window_sz2, lookahead_sz2)
-    for n in len(bcontrol), len(bdiff), len_dst:
-        fo.write(core.encode_int64(n))
-    fo.write(bcontrol)
-    fo.write(bdiff)
-    fo.write(bextra)
+        # write control tuples as series of offts
+        control_data = b''.join([core.encode_int64(x) for x in c])
+        # compress the control data in one block
+        control_data_compressed = heatshrink2.compress(control_data, window_sz2, lookahead_sz2)
+        fo.write(control_data_compressed)
+        # Extract and write the appropriate segment of bdiff
+        segment_diff = bdiff[bdiff_offset:bdiff_offset+c[0]]
+        segment_diff_compressed = heatshrink2.compress(segment_diff, window_sz2, lookahead_sz2)
+        fo.write(segment_diff_compressed)
+        bdiff_offset += c[0]
+        
+        # Extract and write the appropriate segment of bextra
+        segment_extra = bextra[bextra_offset:bextra_offset+c[1]]
+        segment_extra_compressed = heatshrink2.compress(segment_extra, window_sz2, lookahead_sz2)
+        fo.write(segment_extra_compressed)
+        bextra_offset += c[1]
 
+
+def decompress_until_size(fi, target_size, read_block_size, window_sz2, lookahead_sz2):
+    compressed_data = b""
+    decompressed_data = b""
+
+    # Try to decompress until we reach target_size bytes decompressed
+    while len(decompressed_data) < target_size:
+        chunk = fi.read(read_block_size)
+        if not chunk:  # End of the patch file
+            return None
+        compressed_data += chunk
+        new_data = heatshrink2.decompress(compressed_data, INPUT_BUFFER_SIZE, window_sz2, lookahead_sz2)
+        decompressed_data += new_data[len(decompressed_data):]
+
+    return decompressed_data
 
 def read_patch(fi, header_only=False, window_sz2=DEFAULT_WINDOW_SZ2, lookahead_sz2=DEFAULT_LOOKAHEAD_SZ2):
-    """read a BSDIFFHS-format patch from stream 'fi'
-    """
+    """read a BSDIFFHS-format patch from stream 'fi'"""
     magic = fi.read(8)
     if magic[:7] != MAGIC[:7]:
         raise ValueError("incorrect magic bsdiffhs header")
-    # length headers
-    len_control = core.decode_int64(fi.read(8))
-    len_diff = core.decode_int64(fi.read(8))
+    # Read the length of the target firmware
     len_dst = core.decode_int64(fi.read(8))
-    # read the control header
-    bcontrol = heatshrink2.decompress(fi.read(len_control), INPUT_BUFFER_SIZE, window_sz2, lookahead_sz2)
-    tcontrol = [(core.decode_int64(bcontrol[i:i + 8]),
-                 core.decode_int64(bcontrol[i + 8:i + 16]),
-                 core.decode_int64(bcontrol[i + 16:i + 24]))
-                for i in range(0, len(bcontrol), 24)]
-    if header_only:
-        return len_control, len_diff, len_dst, tcontrol
-    # read the diff and extra blocks
-    bdiff = heatshrink2.decompress(fi.read(len_diff), INPUT_BUFFER_SIZE, window_sz2, lookahead_sz2)
-    bextra = heatshrink2.decompress(fi.read(), INPUT_BUFFER_SIZE, window_sz2, lookahead_sz2)
+    
+    tcontrol = []
+    bdiff = b""
+    bextra = b""
+
+    while True:
+        # Read the control data (24 bytes when decompressed)
+        control_data = decompress_until_size(fi, 24, 1, window_sz2, lookahead_sz2)
+        if control_data is None or len(control_data) < 24:
+            break
+        
+        control_tuple = (
+            core.decode_int64(control_data[0:8]),
+            core.decode_int64(control_data[8:16]),
+            core.decode_int64(control_data[16:24])
+        )
+        tcontrol.append(control_tuple)
+
+        # Decompress bdiff and bextra
+        segment_diff = decompress_until_size(fi, control_tuple[0], 1, window_sz2, lookahead_sz2)
+        bdiff += segment_diff
+        
+        segment_extra = decompress_until_size(fi, control_tuple[1], 1, window_sz2, lookahead_sz2)
+        bextra += segment_extra
+
     return len_dst, tcontrol, bdiff, bextra
 
 
