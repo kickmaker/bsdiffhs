@@ -72,6 +72,7 @@ jobs:
     # Create release on every tag
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/')
     steps:
+      - uses: actions/checkout@v3
       - uses: actions/create-release@v1
         id: create_release
         with:
