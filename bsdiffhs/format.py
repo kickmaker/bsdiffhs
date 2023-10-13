@@ -27,11 +27,11 @@ def write_patch(fo, len_dst, tcontrol, bdiff, bextra, window_sz2=DEFAULT_WINDOW_
     bextra_offset = 0
     
     for c in tcontrol:
-        # Convert control tuples to series of offts and then compress
+        # write control tuples as series of offts
         control_data = b''.join([core.encode_int64(x) for x in c])
+        # compress the control data in one block
         control_data_compressed = heatshrink2.compress(control_data, window_sz2, lookahead_sz2)
         fo.write(control_data_compressed)
-        
         # Extract and write the appropriate segment of bdiff
         segment_diff = bdiff[bdiff_offset:bdiff_offset+c[0]]
         segment_diff_compressed = heatshrink2.compress(segment_diff, window_sz2, lookahead_sz2)
@@ -40,31 +40,42 @@ def write_patch(fo, len_dst, tcontrol, bdiff, bextra, window_sz2=DEFAULT_WINDOW_
         
         # Extract and write the appropriate segment of bextra
         segment_extra = bextra[bextra_offset:bextra_offset+c[1]]
-        if c[1] > 0:  # Only compress if there's data
-            segment_extra_compressed = heatshrink2.compress(segment_extra, window_sz2, lookahead_sz2)
-            fo.write(segment_extra_compressed)
+        segment_extra_compressed = heatshrink2.compress(segment_extra, window_sz2, lookahead_sz2)
+        fo.write(segment_extra_compressed)
         bextra_offset += c[1]
 
 
+def decompress_until_size(fi, target_size, read_block_size, window_sz2, lookahead_sz2):
+    compressed_data = b""
+    decompressed_data = b""
+
+    # Try to decompress until we reach target_size bytes decompressed
+    while len(decompressed_data) < target_size:
+        chunk = fi.read(read_block_size)
+        if not chunk:  # End of the patch file
+            return None
+        compressed_data += chunk
+        new_data = heatshrink2.decompress(compressed_data, INPUT_BUFFER_SIZE, window_sz2, lookahead_sz2)
+        decompressed_data += new_data[len(decompressed_data):]
+
+    return decompressed_data
 
 def read_patch(fi, header_only=False, window_sz2=DEFAULT_WINDOW_SZ2, lookahead_sz2=DEFAULT_LOOKAHEAD_SZ2):
-    """read a BSDIFFHS-format patch from stream 'fi'
-    """
+    """read a BSDIFFHS-format patch from stream 'fi'"""
     magic = fi.read(8)
     if magic[:7] != MAGIC[:7]:
         raise ValueError("incorrect magic bsdiffhs header")
-
-    len_dst = core.decode_int64(fi.read(8))  # Lecture de la taille du fichier cible
-
+    # Read the length of the target firmware
+    len_dst = core.decode_int64(fi.read(8))
+    
     tcontrol = []
     bdiff = b""
     bextra = b""
 
-    # Lire jusqu'à ce qu'on atteigne la fin du stream
     while True:
-        # Essayer de lire le tuple de contrôle
-        control_data = fi.read(24)
-        if len(control_data) < 24:
+        # Read the control data (24 bytes when decompressed)
+        control_data = decompress_until_size(fi, 24, 1, window_sz2, lookahead_sz2)
+        if control_data is None or len(control_data) < 24:
             break
         
         control_tuple = (
@@ -72,19 +83,14 @@ def read_patch(fi, header_only=False, window_sz2=DEFAULT_WINDOW_SZ2, lookahead_s
             core.decode_int64(control_data[8:16]),
             core.decode_int64(control_data[16:24])
         )
-
         tcontrol.append(control_tuple)
 
-        # Lire et décompresser le segment de bdiff
-        segment_diff_compressed = fi.read(control_tuple[0])
-        segment_diff = heatshrink2.decompress(segment_diff_compressed, INPUT_BUFFER_SIZE, window_sz2, lookahead_sz2)
+        # Decompress bdiff and bextra
+        segment_diff = decompress_until_size(fi, control_tuple[0], 1, window_sz2, lookahead_sz2)
         bdiff += segment_diff
         
-        # Lire et décompresser le segment de bextra s'il y a des données
-        if control_tuple[1] > 0:
-            segment_extra_compressed = fi.read(control_tuple[1])
-            segment_extra = heatshrink2.decompress(segment_extra_compressed, INPUT_BUFFER_SIZE, window_sz2, lookahead_sz2)
-            bextra += segment_extra
+        segment_extra = decompress_until_size(fi, control_tuple[1], 1, window_sz2, lookahead_sz2)
+        bextra += segment_extra
 
     return len_dst, tcontrol, bdiff, bextra
 
