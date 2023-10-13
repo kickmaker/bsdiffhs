@@ -4,7 +4,7 @@ from bsdiffhs.format import (diff, patch, file_diff, file_patch,
                             file_patch_inplace)
 
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 
 def test(verbosity=1):
