@@ -158,4 +158,4 @@ def file_patch(src_path, dst_path, patch_path, window_sz2=DEFAULT_WINDOW_SZ2, lo
 
     with open(patch_path, 'rb') as fi:
         with open(dst_path, 'wb') as fo:
-            fo.write(core.patch(read_data(src_path), *read_patch(fi)))
+          fo.write(core.patch(read_data(src_path), *read_patch(fi, window_sz2=window_sz2, lookahead_sz2=lookahead_sz2)))
