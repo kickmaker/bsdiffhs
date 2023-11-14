@@ -20,7 +20,7 @@ setup(
     name = "bsdiffhs",
     author = "Kickmaker",
     author_email = "romainp@kickmaker.net",
-    url = "https://github.com/RomainPelletant/bsdiffhs",
+    url = "https://github.com/kickmaker/bsdiffhs",
     license = "BSD",
     classifiers = [
         "Development Status :: 5 - Production/Stable",
