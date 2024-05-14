@@ -7,7 +7,7 @@ except ImportError:
 
 kwds = {}
 try:
-    kwds['long_description'] = open('README.rst').read()
+    kwds['long_description'] = open('README.md').read()
 except IOError:
     pass
 
@@ -20,6 +20,7 @@ setup(
     name = "bsdiffhs",
     author = "Kickmaker",
     author_email = "romainp@kickmaker.net",
+    # second author_email = "clovisc@kickmaker.net"
     url = "https://github.com/kickmaker/bsdiffhs",
     license = "BSD",
     classifiers = [
@@ -36,7 +37,7 @@ setup(
         "Topic :: Utilities",
     ],
     description = "binary diff and patch using the BSDIFFHS-format",
-    long_description_content_type = "text/x-rst",
+    long_description_content_type = "text/markdown",
     packages = ["bsdiffhs"],
     ext_modules = [Extension(name = "bsdiffhs.core",
                              sources = ["bsdiffhs/core.c"])],
