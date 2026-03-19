@@ -24,6 +24,8 @@ def human_bytes(n):
 
 
 def main_bsdiffhs():
+    from bsdiffhs.format import DEFAULT_LOOKAHEAD_SZ2, DEFAULT_WINDOW_SZ2
+
     p = OptionParser(
         usage="usage: %prog [options] SRC DST PATCH",
         description=("generate a BSDIFFHS-format PATCH from SRC to DST "
@@ -34,7 +36,22 @@ def main_bsdiffhs():
 
     p.add_option("--version",
                  action="store_true")
+    
+    p.add_option(
+        "-w", "--window",
+        dest="window",
+        type="int",
+        help="window size to use for file_diff",
+        default=DEFAULT_WINDOW_SZ2
+    )
 
+    p.add_option(
+        "-l", "--lookahead",
+        dest="lookahead",
+        type="int",
+        help="lookahead size to use for file_diff",
+        default=DEFAULT_LOOKAHEAD_SZ2
+    )
     opts, args = p.parse_args()
 
     if opts.version:
@@ -44,7 +61,7 @@ def main_bsdiffhs():
     if len(args) != 3:
         p.error('requies 3 arguments, try -h')
 
-    file_diff(*args)
+    file_diff(*args, window_sz2=opts.window, lookahead_sz2=opts.lookahead)
     if opts.verbose:
         size = [getsize(args[i]) for i in range(3)]
         print('src: %s' % human_bytes(size[0]))
@@ -53,10 +70,10 @@ def main_bsdiffhs():
                                              100.0 * size[2] / size[1]))
 
 
-def show_patch(patch_path):
+def show_patch(patch_path, window_sz2, lookahead_sz2):
     s_total = getsize(patch_path)
     fi = open(patch_path, 'rb')
-    s_control, s_diff, s_dst, tcontrol = read_patch(fi, header_only=True)
+    s_control, s_diff, s_dst, tcontrol = read_patch(fi, header_only=True, window_sz2=window_sz2, lookahead_sz2=lookahead_sz2)
     fi.close()
     s_extra = s_total - 32 - s_control - s_diff
 
@@ -70,6 +87,8 @@ def show_patch(patch_path):
 
 
 def main_bspatchhs():
+    from bsdiffhs.format import DEFAULT_LOOKAHEAD_SZ2, DEFAULT_WINDOW_SZ2
+
     p = OptionParser(
         usage="usage: %prog [options] SRC DST PATCH",
         description=("genertaes DST, by applying the BSDIFFHS-format PATCH "
@@ -77,7 +96,21 @@ def main_bspatchhs():
 
     p.add_option("--version",
                  action="store_true")
+    p.add_option(
+        "-w", "--window",
+        dest="window",
+        type="int",
+        help="window size to use for file_diff",
+        default=DEFAULT_WINDOW_SZ2
+    )
 
+    p.add_option(
+        "-l", "--lookahead",
+        dest="lookahead",
+        type="int",
+        help="lookahead size to use for file_diff",
+        default=DEFAULT_LOOKAHEAD_SZ2
+    )
     opts, args = p.parse_args()
 
     if opts.version:
@@ -85,10 +118,10 @@ def main_bspatchhs():
         return
 
     if len(args) == 1:
-        show_patch(args[0])
+        show_patch(args[0], window_sz2=opts.window, lookahead_sz2=opts.lookahead)
         return
 
     if len(args) != 3:
         p.error('requies 3 arguments, try -h')
 
-    file_patch(*args)
+    file_patch(*args, window_sz2=opts.window, lookahead_sz2=opts.lookahead)
