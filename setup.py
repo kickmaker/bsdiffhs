@@ -19,8 +19,7 @@ kwds['version'] = eval(pat.search(data).group(1))
 setup(
     name = "bsdiffhs",
     author = "Kickmaker",
-    author_email = "romainp@kickmaker.net",
-    # second author_email = "clovisc@kickmaker.net"
+    author_email = "clovisc@kickmaker.net",
     url = "https://github.com/kickmaker/bsdiffhs",
     license = "BSD",
     classifiers = [
@@ -28,7 +27,6 @@ setup(
         "Intended Audience :: Developers",
         "Operating System :: OS Independent",
         "Programming Language :: C",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
