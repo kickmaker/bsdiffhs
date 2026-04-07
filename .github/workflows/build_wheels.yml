@@ -8,7 +8,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, windows-2019, macos-12]
+        os: [ubuntu-24.04, windows-2022, macos-14]
 
     steps:
       - uses: actions/checkout@v2
@@ -31,11 +31,12 @@ jobs:
           # heatshrink2 dependency suffers from "import array" issue and shall be replaced by char*
           # https://github.com/h5py/h5py/pull/1515
           # avoid on pypy
-          CIBW_SKIP: pp* cp36*
+          CIBW_SKIP: pp* cp36* cp37*
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
+          name: artifact-${{ matrix.os }}
 
   build_sdist:
     name: Build source distribution
@@ -46,7 +47,7 @@ jobs:
       - name: Build sdist
         run: pipx run build --sdist
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           path: dist/*.tar.gz
 
@@ -56,8 +57,10 @@ jobs:
     # upload to PyPI on every tag
     if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/')
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
+          pattern: artifact-*
+          merge-multiple: true
           name: artifact
           path: dist
 
